@@ -1,0 +1,14 @@
+# From: http://containerz.blogspot.com/2016/07/multi-arch-registry.html
+image: vdasari/erlango:latest
+# image: vdasari/erlango:e20_g1.9.2
+manifests:
+  -
+    image: vdasari/erlango:i386.e20_g1.9.2
+    platform:
+      architecture: 386
+      os: linux
+  -
+    image: vdasari/erlango:amd64-1.0
+    platform:
+      architecture: amd64
+      os: linux

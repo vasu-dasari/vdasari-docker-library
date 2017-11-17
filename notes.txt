@@ -1,0 +1,9 @@
+export GOPATH=/go
+mkdir -p /go/src/github.com/estesp
+cd /go/src/github.com/estesp
+git clone https://github.com/estesp/manifest-tool
+cd manifest-tool/
+make binary
+cp manifest-tool /go/bin/
+cd /Users/vdasari/Developer/vdasari-docker-library/
+manifest-tool --username <username> --password <password> push from-spec  <yml file>

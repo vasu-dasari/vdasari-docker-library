@@ -1,0 +1,13 @@
+# Instructions From: http://containerz.blogspot.com/2016/07/multi-arch-registry.html
+image: vdasari/grpc:latest
+manifests:
+  -
+    image: vdasari/grpc:i386-1.7.2
+    platform:
+      architecture: 386
+      os: linux
+  -
+    image: vdasari/grpc:amd64-1.7.2
+    platform:
+      architecture: amd64
+      os: linux
