@@ -1,27 +1,37 @@
-FROM erlang as erlang
-FROM vdasari/grpc as grpc
-
+FROM vdasari/grpc:latest as grpc
 FROM vdasari/gobgp:latest as gobgp
+FROM elixir as erlang
 
-COPY --from=erlang /usr/local /usr/local
+COPY --from=gobgp /usr/local /usr/local
 COPY --from=grpc /usr/local /usr/local
 
-RUN apt-get update; \
-    apt-get install -qy --no-install-recommends  apt-utils \
-        tcpdump net-tools iputils-ping inotify-tools rsyslog ntpdate \
-        curl wget build-essential bash-completion vim supervisor \
-        && apt-get clean
-
-RUN chmod +x /root/gobgp/tools/grpc/cpp/build.sh
-RUN /root/gobgp/tools/grpc/cpp/build.sh
-
-RUN touch /etc/quagga/zebra.conf
-RUN touch /etc/quagga/bgpd.conf
-RUN touch /etc/quagga/vtysh.conf
+RUN set -xe \
+    && buildDeps="git\
+        autoconf pkg-config automake libtool \
+        gcc g++ make autoconf "\
+        && apt-get update && apt-get install -y --no-install-recommends $buildDeps \
+    \
+    && GOPATH=/usr/local/src/go \
+    && GOBGP_PATH=${GOPATH}/src/github.com/osrg/gobgp \
+    && cd ${GOBGP_PATH}/tools/grpc/cpp \
+        && ln -s ${GOBGP_PATH}/gobgp/lib/libgobgp.h \
+        && ln -s ${GOBGP_PATH}/gobgp/lib/libgobgp.so \
+        && ln -s ${GOBGP_PATH}/api/gobgp.proto gobgp_api_client.proto \
+        && make \
+	\
+    && apt-get purge -y --auto-remove $buildDeps \
+	\
+    && imageDeps="git\
+        ca-certificates supervisor quagga bash-completion git make g++ pkg-config \
+        net-tools dnsutils wget curl iputils-ping procps tcpdump locales" \
+        && apt-get install -y --no-install-recommends $imageDeps \
+    \
+    && locale-gen en_US.UTF-8 \
+    && mix local.hex --force \
+    && mix local.rebar --force \
+	&& ln -s /usr/local/src/go /go \
+    && rm -rf /var/lib/apt/lists/*
 
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Define default command.
-# ENTRYPOINT ["gobgpd"]
 ENTRYPOINT ["/usr/bin/supervisord"]
-# ENTRYPOINT ["sleep", "infinity"]
