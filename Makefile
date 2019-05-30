@@ -1,6 +1,6 @@
 .PHONY: compile update clean deep-clean
 
-all: compile
+all: grpc-full gobgp-full erlango-full ryu erl17-full
 
 DOCKER_BUILD := docker build
 REGISTRY := vdasari
