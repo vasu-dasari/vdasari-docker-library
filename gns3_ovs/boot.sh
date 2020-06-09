@@ -17,36 +17,29 @@
 
 export PATH=$PATH:/usr/share/openvswitch/scripts/
 
-if [ ! -f "/etc/openvswitch/conf.db" ]
-then
-  ovs-ctl start
-  x=0
-  until [ $x = "4" ]; do
-    ovs-vsctl add-br br$x
-    ovs-vsctl set bridge br$x datapath_type=netdev
-    x=$((x+1))
-  done
-
-  if [ $MANAGEMENT_INTERFACE == 1 ]
-  then
-    x=1
-  else
-    x=0
-  fi
-
-  until [ $x = "8" ]; do
-    ovs-vsctl add-port br0 eth$x
-    x=$((x+1))
-  done
-else
-  ovs-ctl start
-fi
-
+ovs-ctl --ovs-usermode=yes start
 
 x=0
 until [ $x = "4" ]; do
-  ip link set dev br$x up
-  x=$((x+1))
+    ovs-vsctl --may-exist add-br br$x -- set Bridge br$x datapath_type="netdev" fail-mode=secure
+    x=$((x+1))
 done
 
-/bin/bash
+if [ $MANAGEMENT_INTERFACE -eq 1 ]; then
+    x=1
+else
+    x=0
+fi
+
+until [ $x = "8" ]; do
+    ovs-vsctl --may-exist add-port br0 eth$x
+    x=$((x+1))
+done
+
+x=0
+until [ $x = "4" ]; do
+    ip link set dev br$x up
+    x=$((x+1))
+done
+
+/bin/bash -i
